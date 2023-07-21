@@ -46,6 +46,28 @@ int openReadFile (char* filename) {
     return file_fd;
 }
 
+int readFromFile(Client client, DATAPacket &packet) {
+    ssize_t bytesRead = pread(client.file_fd, packet.data, sizeof(packet.data), blockSize*client.block_num);
+
+    if (bytesRead == -1) {
+        // Error while reading
+        std::cerr << "Error reading file at offset " << blockSize*client.block_num << std::endl;
+        close(client.file_fd);
+    }    
+    return bytesRead;
+}
+
+int writeToFile(Client client, DATAPacket packet) {
+    ssize_t bytesWritten = pwrite(client.file_fd, packet.data, strlen(packet.data), blockSize*client.block_num);
+
+    if (bytesWritten == -1) {
+        // Error while writing
+        std::cerr << "Error writing file at offset " << blockSize*client.block_num << std::endl;
+        close(client.file_fd);
+    }
+    return bytesWritten;
+}
+
 
 void handleMessage(void* buffer, sockaddr_in clientAddr, std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> activeClients){
     uint16_t opcode = getOpcode(buffer);
@@ -70,6 +92,8 @@ void handleMessage(void* buffer, sockaddr_in clientAddr, std::unordered_map<std:
     case OP_ACK:
         Client activeClient = getClient(activeClients, clientIP, clientPort);
         incrementBlockNum(activeClients, clientIP, clientPort);
+        DATAPacket reply(activeClient.block_num, "");
+        readFromFile(activeClient, reply);
         break;
     default:
         break;
