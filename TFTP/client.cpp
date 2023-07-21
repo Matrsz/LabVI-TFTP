@@ -35,6 +35,7 @@ int main() {
 
     RWPacket rwPacket(OP_RRQ, filename, mode);
 
+
     // Print destination address
     std::cout << "Sending message to " <<    inet_ntoa(serverAddr.sin_addr) << ", Port: " << ntohs(serverAddr.sin_port) << std::endl;
 
