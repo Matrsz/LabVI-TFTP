@@ -71,5 +71,5 @@
 - NO usar fork xke los hijos compartirian el unico socket y sería caos total
 - no usar loop porque es bloqueante, tiene que ser máquina de estados
 - maquina de estados tendría
-  - estado cliente: ip cliente, puerto cliente, fd_file, offset(block num)
+  - estado cliente: ip cliente, puerto cliente, file_fd, offset(block num)
   - estructura hash (unordered map) hasheado con clave ip puerto (uint32, uint16) se puede mantener en network order (no nstoh)
