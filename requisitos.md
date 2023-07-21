@@ -62,34 +62,6 @@
 
 ## Funciones necesitadas server side
 
-`void* recvPacket(char* buffer)`
-
-- retorna una stuct tipo RRQ, WRQ, DATA, etc...
-- nota: castear el buffer a uint16 y multiplexar en funcion del opcode para elegir el tipo de struct correcto
-
-`void sendFile(int socket_fd, char* filename)`
-
-- abre el file, inicializa el contador blocknum, y realiza el ciclo
-  - leer del file, enviar DATA
-  - esperar ACK
-- itera hasta haber enviado un paquete con menos de 512 bytes
-
-`void recvFile(int socket_fd, char* filename)`
-
-- abre el file, inicializa el contador blocknum, y realiza el ciclo
-  - recibir DATA, escribir a file
-  - enviar ACK
-- repite hasta haber recibido un paquete con menos de 512 bytes
-
-
-`bool sendData(int socket_fd, int file_fd, int blocknum)`
-
-`bool recvData(int socket_fd, int file_fd, int blocknum)`
-
-`void sendAck(int socket_fd, int blocknum)`
-
-`void sendErr(int socket_fd, unit32 error)`
-
 
 ## Multiples clientes
 
