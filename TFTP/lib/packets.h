@@ -70,5 +70,6 @@ struct ERRORPacket {
 uint16_t getOpcode(const void* buffer);
 char* getFilename(void* buffer);
 DATAPacket getData(void* buffer);
+ACKPacket getACK(void* buffer);
 
 #endif

@@ -35,15 +35,18 @@ void initializeTransfer(uint16_t opcode, const char* filename, int socket_fd, so
     }
 }
 
-bool handleReply(void* buffer, int socket_fd, sockaddr_in serverAddr, int file_fd, uint16_t &block_num){
+bool handleReply(void* buffer, int bytes_recv, int socket_fd, sockaddr_in serverAddr, int file_fd, uint16_t &block_num){
     uint16_t opcode = getOpcode(buffer);
     std::cout << "Received reply from server: " << getOpcode(buffer) << std::endl;
 
     switch (opcode) {
         case OP_DATA: {
             DATAPacket packet = getData(buffer);
-            int bytesWritten = writeToFile(file_fd, packet);
+            std::cout << "Received DATA block " << ntohs(packet.hdr.block_num)<< std::endl;
+            int bytesWritten = writeToFile(file_fd, packet, bytes_recv-sizeof(packet.hdr));
             ACKPacket reply(block_num);
+            block_num++;
+            std::cout << "Sending ACK of block " << ntohs(reply.hdr.block_num)<< std::endl;
             sendMessage(socket_fd, serverAddr, (void*) &reply, sizeof(reply));
             if (bytesWritten < blockSize) {
                 close(file_fd);
@@ -52,16 +55,20 @@ bool handleReply(void* buffer, int socket_fd, sockaddr_in serverAddr, int file_f
             break;
         }
         case OP_ACK: {
-            if (!isFileOpen(file_fd)) {
-                return false;
-                break;
-            }
-            block_num += 1;
+            ACKPacket packet = getACK(buffer);
+            std::cout << "Received ACK of block " << ntohs(packet.hdr.block_num)<< std::endl;
+//            if (!isFileOpen(file_fd)) {
+//                return false;
+//                break;
+//            }
+            block_num++;
             DATAPacket reply(block_num);
             int bytesRead = readFromFile(file_fd, reply);
-            sendMessage(socket_fd, serverAddr, (void*) &reply, sizeof(OP_DATA)+bytesRead);
+            std::cout << "Sending DATA block " << ntohs(reply.hdr.block_num)<< std::endl;
+            sendMessage(socket_fd, serverAddr, (void*) &reply, sizeof(reply.hdr)+bytesRead);
             if (bytesRead < blockSize) {
                 close(file_fd);
+                return false;
             }
             break;
         }
@@ -96,29 +103,28 @@ int main() {
 
     bool active_transfer = true;
     while(active_transfer) {
-        int bytesRead = receiveMessage(socket_fd, serverAddr, buffer, sizeof(buffer));
-        if (bytesRead < 0) {
+        int bytes_recv = receiveMessage(socket_fd, serverAddr, buffer, sizeof(buffer));
+        if (bytes_recv < 0) {
             perror("recvfrom failed");
             close(socket_fd);
             return 1;
         }
-        active_transfer = handleReply(buffer, socket_fd, serverAddr, file_fd, block_num);
+        active_transfer = handleReply(buffer, bytes_recv, socket_fd, serverAddr, file_fd, block_num);
     }
 
-#if 0
     initializeTransfer(OP_WRQ, "w_example.txt", socket_fd, serverAddr, &file_fd, block_num);
 
     active_transfer = true;
     while(active_transfer) {
-        int bytesRead = receiveMessage(socket_fd, serverAddr, buffer, sizeof(buffer));
-        if (bytesRead < 0) {
+        int bytes_recv = receiveMessage(socket_fd, serverAddr, buffer, sizeof(buffer));
+        if (bytes_recv < 0) {
             perror("recvfrom failed");
             close(socket_fd);
             return 1;
         }
-        active_transfer = handleReply(buffer, socket_fd, serverAddr, file_fd, block_num);
+        active_transfer = handleReply(buffer, bytes_recv, socket_fd, serverAddr, file_fd, block_num);
     }
-#endif
+
     close(socket_fd);
     return 0;
 }

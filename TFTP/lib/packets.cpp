@@ -74,3 +74,8 @@ DATAPacket getData(void* buffer) {
     DATAPacket* packet = reinterpret_cast<DATAPacket*>(buffer);
     return *packet;
 }
+
+ACKPacket getACK(void* buffer) {
+    ACKPacket* packet = reinterpret_cast<ACKPacket*>(buffer);
+    return *packet;
+}

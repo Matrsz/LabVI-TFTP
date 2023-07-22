@@ -17,9 +17,8 @@
 
 const int blockSize = 512;
 
-void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, ClientsMap &activeClients){
+void handleMessage(void* buffer, int bytes_recv, int socket_fd, sockaddr_in clientAddr, ClientsMap &activeClients){
     uint16_t opcode = getOpcode(buffer);
-    std::cout << "Received request from client: " << getOpcode(buffer) << std::endl;
     uint32_t clientIP;
     uint16_t clientPort;
     clientInfo(clientAddr, clientIP, clientPort);
@@ -31,6 +30,7 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, ClientsM
             std::cout << "Received WRQ of file " << filename << std::endl; 
             printActiveClients(activeClients, std::cout);
             ACKPacket reply(0);
+            std::cout << "Sending ACK of block " << ntohs(reply.hdr.block_num)<< std::endl;
             sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply));
             break;
         }
@@ -42,6 +42,7 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, ClientsM
             printActiveClients(activeClients, std::cout);
             DATAPacket reply(1);
             int bytesRead = readFromFile(file_fd, reply);
+            std::cout << "Sending DATA block " << ntohs(reply.hdr.block_num)<< std::endl;
             sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply.hdr) + bytesRead);
             if (bytesRead < blockSize) {
                 close(file_fd);
@@ -55,10 +56,12 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, ClientsM
                 std::cout << "#### problemas\n";
                 break;
             }
-
             DATAPacket packet = getData(buffer);
-            int bytesWritten = writeToFile(activeClient->file_fd, packet);
+            std::cout << "Received DATA block " << ntohs(packet.hdr.block_num)<< std::endl;
+            int bytesWritten = writeToFile(activeClient->file_fd, packet, bytes_recv-sizeof(packet.hdr));
             ACKPacket reply(activeClient->block_num_ho);
+            incrementBlockNum(activeClients, clientIP, clientPort);
+            std::cout << "Sending ACK of block " << ntohs(reply.hdr.block_num)<< std::endl;
             sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply));
             if (bytesWritten < blockSize) {
                 close(activeClient->file_fd);
@@ -67,6 +70,8 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, ClientsM
             break;
         }
         case OP_ACK: {
+            ACKPacket packet = getACK(buffer);
+            std::cout << "Received ACK of block " << ntohs(packet.hdr.block_num)<< std::endl;
             if (!hasClient(activeClients, clientIP, clientPort)) {
                 break;
             }
@@ -78,9 +83,10 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, ClientsM
             auto inc_bn_ho = incrementBlockNum(activeClients, clientIP, clientPort);
             DATAPacket reply(inc_bn_ho);
             int bytesRead = readFromFile(activeClient->file_fd, reply);
-            sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(OP_DATA)+bytesRead);
+            std::cout << "Sending DATA block " << ntohs(reply.hdr.block_num)<< std::endl;
+            sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply.hdr)+bytesRead);
             if (bytesRead < blockSize) {
-                // close(activeClient.file_fd);
+                close(activeClient->file_fd);
                 removeClient(activeClients, clientIP, clientPort);
             }
             break;
@@ -104,13 +110,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const* argv[]) {
 
 
     while (true) {
-        int bytesRead = receiveMessage(socket_fd, clientAddr, buffer, sizeof(buffer));
-        if (bytesRead < 0) {
+        int bytes_recv = receiveMessage(socket_fd, clientAddr, buffer, sizeof(buffer));
+        if (bytes_recv < 0) {
             perror("recvfrom failed");
             close(socket_fd);
             return 1;
         }
-        handleMessage(buffer, socket_fd, clientAddr, activeClients);
+        handleMessage(buffer, bytes_recv, socket_fd, clientAddr, activeClients);
     }
     close(socket_fd);
     return 0;

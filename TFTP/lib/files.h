@@ -14,5 +14,5 @@
 int openWriteFile (const char* filename);
 int openReadFile (const char* filename);
 int readFromFile(int file_fd, DATAPacket &packet);
-int writeToFile(int file_fd, DATAPacket packet);
+int writeToFile(int file_fd, DATAPacket packet, int bytes_recv);
 bool isFileOpen(int file_fd);

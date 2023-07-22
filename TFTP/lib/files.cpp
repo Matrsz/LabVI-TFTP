@@ -49,10 +49,10 @@ int readFromFile(int file_fd, DATAPacket &packet) {
     return bytesRead;
 }
 
-int writeToFile(int file_fd, DATAPacket packet) {
+int writeToFile(int file_fd, DATAPacket packet, int bytes_recv) {
     int offset = blockSize*(ntohs(packet.hdr.block_num)-1);
-    std::cout << "Writing " << strlen(packet.data) << " bytes: " << packet.data << std::endl;
-    ssize_t bytesWritten = pwrite(file_fd, packet.data, strlen(packet.data), offset);
+    std::cout << "Writing " << bytes_recv << " bytes\n";
+    ssize_t bytesWritten = pwrite(file_fd, packet.data, bytes_recv, offset);
 
     if (bytesWritten == -1) {
         // Error while writing
