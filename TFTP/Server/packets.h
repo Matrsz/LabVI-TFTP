@@ -1,3 +1,6 @@
+#ifndef TFTP_PACKETS_H
+#define TFTP_PACKETS_H
+
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,23 +32,23 @@ struct RWPacket {
 
 struct DATAPacket {
     uint16_t opcode;
-    uint16_t blockNumber;
+    uint16_t block_num;
     char data[512];
 
-    DATAPacket(uint16_t blockNumber, const char* data) {
+    DATAPacket(uint16_t block_num, const char* data) {
         opcode = htons(OP_DATA);
-        this->blockNumber = htons(blockNumber);
+        this->block_num = htons(block_num);
         std::strcpy(this->data, data);
     }
 };
 
 struct ACKPacket {
     uint16_t opcode;
-    uint16_t blockNumber;
+    uint16_t block_num;
 
-    ACKPacket(uint16_t blockNumber) {
+    ACKPacket(uint16_t block_num) {
         opcode = htons(OP_ACK);
-        this->blockNumber = htons(blockNumber);
+        this->block_num = htons(block_num);
     }
 };
 
@@ -60,3 +63,9 @@ struct ERRORPacket {
         std::strcpy(this->errorMsg, errorMsg);
     }
 };
+
+uint16_t getOpcode(const void* buffer);
+char* getFilename(void* buffer);
+DATAPacket getData(void* buffer);
+
+#endif

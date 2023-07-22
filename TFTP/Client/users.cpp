@@ -65,7 +65,7 @@ bool hasClient(const std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash
 void addClient(std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> &activeClients, uint32_t address, uint16_t port, int file_fd) {
     if (!hasClient(activeClients, address, port)) {
         std::pair<uint32_t, uint16_t> key = std::make_pair(address, port);
-        activeClients[key] = Client(address, port, file_fd, 0);
+        activeClients[key] = Client(address, port, file_fd, 1);
     }
     return;
 }
