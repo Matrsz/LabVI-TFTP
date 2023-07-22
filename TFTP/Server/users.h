@@ -33,6 +33,7 @@ struct hash_pair {
 };
 
 using ClientsMap = std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair>;
+using CMKey = ClientsMap::key_type;
 
 void printActiveClients(const ClientsMap &activeClients, std::ostream &os);
 bool hasClient(const ClientsMap &activeClients, uint32_t address, uint16_t port);

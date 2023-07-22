@@ -66,7 +66,7 @@ void addClient(ClientsMap &activeClients, uint32_t address, uint16_t port, int f
 }
 
 const Client *getClient(ClientsMap &activeClients, uint32_t address, uint16_t port) {
-    pair<uint32_t, uint16_t> key = make_pair(address, port);
+    CMKey key = make_pair(address, port);
     auto it = activeClients.find(key);
     if( it == activeClients.end() )
         return nullptr;
@@ -74,13 +74,13 @@ const Client *getClient(ClientsMap &activeClients, uint32_t address, uint16_t po
 }
 
 void removeClient(ClientsMap &activeClients, uint32_t address, uint16_t port) {
-    pair<uint32_t, uint16_t> key = make_pair(address, port);
+    CMKey key = make_pair(address, port);
     activeClients.erase(key);
     return;
 }
 
 uint16_t incrementBlockNum(ClientsMap &activeClients, uint32_t address, uint16_t port) {
-    pair<uint32_t, uint16_t> key = make_pair(address, port);
+    CMKey key = make_pair(address, port);
     auto it = activeClients.find(key);
     if( it == activeClients.end() )
         return 0;
