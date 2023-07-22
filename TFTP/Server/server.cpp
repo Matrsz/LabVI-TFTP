@@ -81,7 +81,7 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, std::uno
     }
 }
 
-int main(int argc, char const* argv[]) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char const* argv[]) {
     std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> activeClients;
     
     struct sockaddr_in clientAddr;
