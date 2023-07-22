@@ -28,7 +28,7 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, std::uno
             char* filename = getFilename(buffer);
             int file_fd = openWriteFile(filename);
             addClient(activeClients, clientIP, clientPort, file_fd);
-            std::cout << "Received RRQ of file " << filename << std::endl; 
+            std::cout << "Received WRQ of file " << filename << std::endl; 
             printActiveClients(activeClients);
             ACKPacket reply(0);
             sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply));
@@ -38,7 +38,7 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, std::uno
             char* filename = getFilename(buffer);
             int file_fd = openReadFile(filename);
             addClient(activeClients, clientIP, clientPort, file_fd);
-            std::cout << "Received WRQ of file " << filename << std::endl; 
+            std::cout << "Received RRQ of file " << filename << std::endl; 
             printActiveClients(activeClients);
             DATAPacket reply(1, "");
             int bytesRead = readFromFile(file_fd, reply);

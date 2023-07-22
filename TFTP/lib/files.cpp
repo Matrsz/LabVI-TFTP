@@ -10,7 +10,6 @@
 #include "connections.h"
 #include <fcntl.h>
 #include "packets.h"
-#include "users.h"
 
 #define PORT 1069
 

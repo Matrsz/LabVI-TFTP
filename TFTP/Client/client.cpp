@@ -72,14 +72,14 @@ bool handleReply(void* buffer, int socket_fd, sockaddr_in serverAddr, int file_f
 }
 
 int main() {
-    struct sockaddr_in serverAddr;
     char buffer[1024];
 
     // Create UDP socket
     int socket_fd = createSocket();
 
     // Set server address
-    memset(&serverAddr, 0, sizeof(serverAddr));
+    // memset(&serverAddr, 0, sizeof(serverAddr));
+    sockaddr_in serverAddr = { 0 };
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(PORT);
     inet_aton(SERVER_IP, &serverAddr.sin_addr);
@@ -105,6 +105,7 @@ int main() {
         active_transfer = handleReply(buffer, socket_fd, serverAddr, file_fd, block_num);
     }
 
+#if 0
     initializeTransfer(OP_WRQ, "w_example.txt", socket_fd, serverAddr, &file_fd, block_num);
 
     active_transfer = true;
@@ -117,7 +118,7 @@ int main() {
         }
         active_transfer = handleReply(buffer, socket_fd, serverAddr, file_fd, block_num);
     }
-    
+#endif
     close(socket_fd);
     return 0;
 }

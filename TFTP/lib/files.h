@@ -10,7 +10,6 @@
 #include "connections.h"
 #include <fcntl.h>
 #include "packets.h"
-#include "users.h"
 
 int openWriteFile (const char* filename);
 int openReadFile (const char* filename);

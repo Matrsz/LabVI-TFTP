@@ -21,7 +21,7 @@ int createSocket() {
 }
 
 void bindSocket(int server_fd) {
-    struct sockaddr_in address;
+    sockaddr_in address = { 0 };
     int addrlen = sizeof(address);
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = inet_addr(SERVER_IP);
