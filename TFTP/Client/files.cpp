@@ -16,7 +16,7 @@
 
 const int blockSize = 512;
 
-int openWriteFile (char* filename) {
+int openWriteFile (const char* filename) {
     int file_fd = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
 
     if (file_fd == -1) {
@@ -27,7 +27,7 @@ int openWriteFile (char* filename) {
     return file_fd;
 }
 
-int openReadFile (char* filename) {
+int openReadFile (const char* filename) {
     int file_fd = open(filename, O_RDONLY);
 
     if (file_fd == -1) {

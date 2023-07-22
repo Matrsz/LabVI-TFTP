@@ -12,8 +12,8 @@
 #include "packets.h"
 #include "users.h"
 
-int openWriteFile (char* filename);
-int openReadFile (char* filename);
+int openWriteFile (const char* filename);
+int openReadFile (const char* filename);
 int readFromFile(int file_fd, DATAPacket &packet);
 int writeToFile(int file_fd, DATAPacket packet);
 bool isFileOpen(int file_fd);
