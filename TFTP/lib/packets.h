@@ -31,24 +31,27 @@ struct RWPacket {
 
 
 struct DATAPacket {
-    uint16_t opcode;
-    uint16_t block_num;
+    struct Hdr {
+        uint16_t opcode;
+        uint16_t block_num;
+    } hdr;
     char data[512];
 
-    DATAPacket(uint16_t block_num, const char* data) {
-        opcode = htons(OP_DATA);
-        this->block_num = htons(block_num);
-        std::strcpy(this->data, data);
+    DATAPacket(uint16_t block_num) {
+        hdr.opcode = htons(OP_DATA);
+        hdr.block_num = htons(block_num);
     }
 };
 
 struct ACKPacket {
-    uint16_t opcode;
-    uint16_t block_num;
+    struct Hdr {
+        uint16_t opcode;
+        uint16_t block_num;
+    } hdr;
 
-    ACKPacket(uint16_t block_num) {
-        opcode = htons(OP_ACK);
-        this->block_num = htons(block_num);
+    ACKPacket(uint16_t block_num_ho) {
+        hdr.opcode = htons(OP_ACK);
+        hdr.block_num = htons(block_num_ho);
     }
 };
 

@@ -57,7 +57,7 @@ bool handleReply(void* buffer, int socket_fd, sockaddr_in serverAddr, int file_f
                 break;
             }
             block_num += 1;
-            DATAPacket reply(block_num, "");
+            DATAPacket reply(block_num);
             int bytesRead = readFromFile(file_fd, reply);
             sendMessage(socket_fd, serverAddr, (void*) &reply, sizeof(OP_DATA)+bytesRead);
             if (bytesRead < blockSize) {

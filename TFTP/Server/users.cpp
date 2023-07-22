@@ -9,75 +9,87 @@
 #include "connections.h"
 #include "users.h"
 
+using namespace std;
+
 Client::Client(uint32_t address_, uint16_t port_, int file_fd_, uint16_t block_num_)
-    : address(address_),
-      port(port_),
+    : address_ho(address_),
+      port_ho(port_),
       file_fd(file_fd_),
-      block_num(block_num_)
+      block_num_ho(block_num_)
 {
 }
 
-Client::Client()
-    : address(0),
-      port(0),
-      file_fd(0),
-      block_num(0)
-{
-}
+// Client::Client()
+//     : address_ho(0),
+//       port_ho(0),
+//       file_fd(0),
+//       block_num_ho(0)
+// {
+// }
 
+// Client::~Client()
+// {
+//     close(file_fd);
+// }
 
-void Client::printClient(std::ostream &os) {
+void Client::printClient(ostream &os) {
     os << "User Information:" << std::endl;
-    os << "IP Address: " << (address >> 24) << "." << ((address >> 16) & 0xFF) << "."
-              << ((address >> 8) & 0xFF) << "." << (address & 0xFF) << std::endl;
-    os << "Port: " << port << std::endl;
-    os << "File Descriptor: " << file_fd << std::endl;
-    os << "Block Number: " << block_num << std::endl;
+    os << "IP Address: " << (address_ho >> 24) << "." << ((address_ho >> 16) & 0xFF) << "."
+              << ((address_ho >> 8) & 0xFF) << "." << (address_ho & 0xFF) << std::endl;
+    os << "Port: " << port_ho << endl;
+    os << "File Descriptor: " << file_fd << endl;
+    os << "Block Number: " << block_num_ho << endl;
     return;
 }
 
-void printActiveClients(const ClientsMap &activeClients, std::ostream &os) {
-    std::cout << "Contents of the unordered_map : \n";
+void printActiveClients(const ClientsMap &activeClients, ostream &os) {
+    os << "Contents of the unordered_map : \n";
     for (auto p : activeClients) {
-        std::cout << "[" << (p.first).first << ", "
-             << (p.first).second << "] ==> \n";
+        os << "[" << hex << (p.first).first << ", "
+             << dec << (p.first).second << "] ==> \n";
         p.second.printClient(os);
     }
     return;
 }
 
 bool hasClient(const ClientsMap &activeClients, uint32_t address, uint16_t port) {
-    std::pair<uint32_t, uint16_t> key = std::make_pair(address, port);
+    pair<uint32_t, uint16_t> key = make_pair(address, port);
     return activeClients.find(key) != activeClients.end();
 }
 
 void addClient(ClientsMap &activeClients, uint32_t address, uint16_t port, int file_fd) {
     if (!hasClient(activeClients, address, port)) {
-        std::pair<uint32_t, uint16_t> key = std::make_pair(address, port);
-        activeClients[key] = Client(address, port, file_fd, 1);
+        pair<uint32_t, uint16_t> key = make_pair(address, port);
+        activeClients.insert(make_pair(key, Client{address, port, file_fd, 1}));
     }
     return;
 }
 
-Client getClient(ClientsMap &activeClients, uint32_t address, uint16_t port) {
-    std::pair<uint32_t, uint16_t> key = std::make_pair(address, port);
-    return activeClients[key];
+const Client *getClient(ClientsMap &activeClients, uint32_t address, uint16_t port) {
+    pair<uint32_t, uint16_t> key = make_pair(address, port);
+    auto it = activeClients.find(key);
+    if( it == activeClients.end() )
+        return nullptr;
+    return &it->second;
 }
 
 void removeClient(ClientsMap &activeClients, uint32_t address, uint16_t port) {
-    std::pair<uint32_t, uint16_t> key = std::make_pair(address, port);
+    pair<uint32_t, uint16_t> key = make_pair(address, port);
     activeClients.erase(key);
     return;
 }
 
-void incrementBlockNum(ClientsMap &activeClients, uint32_t address, uint16_t port) {
-    std::pair<uint32_t, uint16_t> key = std::make_pair(address, port);
-    activeClients[key].block_num++;
-    return;
+uint16_t incrementBlockNum(ClientsMap &activeClients, uint32_t address, uint16_t port) {
+    pair<uint32_t, uint16_t> key = make_pair(address, port);
+    auto it = activeClients.find(key);
+    if( it == activeClients.end() )
+        return 0;
+    return ++it->second.block_num_ho;
 }
 
 void clientInfo(const sockaddr_in& clientAddr, uint32_t &address, uint16_t &port) {
-    address = ntohs(clientAddr.sin_addr.s_addr);
+    address = ntohl(clientAddr.sin_addr.s_addr);
     port = ntohs(clientAddr.sin_port);
     return;
 }
+

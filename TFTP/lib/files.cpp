@@ -37,9 +37,9 @@ int openReadFile (const char* filename) {
 }
 
 int readFromFile(int file_fd, DATAPacket &packet) {
-    int offset = blockSize*(ntohs(packet.block_num)-1);
+    int offset = blockSize*(ntohs(packet.hdr.block_num)-1);
     ssize_t bytesRead = pread(file_fd, packet.data, sizeof(packet.data), offset);
-    std::cout << "Read " << strlen(packet.data) << " bytes: " << packet.data << std::endl;
+    std::cout << "Read " << sizeof(packet.data) << " bytes\n";
 
     if (bytesRead == -1) {
         // Error while reading
@@ -50,7 +50,7 @@ int readFromFile(int file_fd, DATAPacket &packet) {
 }
 
 int writeToFile(int file_fd, DATAPacket packet) {
-    int offset = blockSize*(ntohs(packet.block_num)-1);
+    int offset = blockSize*(ntohs(packet.hdr.block_num)-1);
     std::cout << "Writing " << strlen(packet.data) << " bytes: " << packet.data << std::endl;
     ssize_t bytesWritten = pwrite(file_fd, packet.data, strlen(packet.data), offset);
 

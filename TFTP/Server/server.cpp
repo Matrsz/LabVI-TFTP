@@ -17,7 +17,7 @@
 
 const int blockSize = 512;
 
-void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> activeClients){
+void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, ClientsMap &activeClients){
     uint16_t opcode = getOpcode(buffer);
     std::cout << "Received request from client: " << getOpcode(buffer) << std::endl;
     uint32_t clientIP;
@@ -40,9 +40,9 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, std::uno
             addClient(activeClients, clientIP, clientPort, file_fd);
             std::cout << "Received RRQ of file " << filename << std::endl; 
             printActiveClients(activeClients, std::cout);
-            DATAPacket reply(1, "");
+            DATAPacket reply(1);
             int bytesRead = readFromFile(file_fd, reply);
-            sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(OP_DATA)+bytesRead);
+            sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply.hdr) + bytesRead);
             if (bytesRead < blockSize) {
                 close(file_fd);
                 removeClient(activeClients, clientIP, clientPort);
@@ -50,13 +50,18 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, std::uno
             break;
         }
         case OP_DATA: {
-            Client activeClient = getClient(activeClients, clientIP, clientPort);
+            const Client *activeClient = getClient(activeClients, clientIP, clientPort);
+            if( ! activeClient ) {
+                std::cout << "#### problemas\n";
+                break;
+            }
+
             DATAPacket packet = getData(buffer);
-            int bytesWritten = writeToFile(activeClient.file_fd, packet);
-            ACKPacket reply(activeClient.block_num);
+            int bytesWritten = writeToFile(activeClient->file_fd, packet);
+            ACKPacket reply(activeClient->block_num_ho);
             sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply));
             if (bytesWritten < blockSize) {
-                close(activeClient.file_fd);
+                close(activeClient->file_fd);
                 removeClient(activeClients, clientIP, clientPort);
             }
             break;
@@ -65,13 +70,17 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, std::uno
             if (!hasClient(activeClients, clientIP, clientPort)) {
                 break;
             }
-            Client activeClient = getClient(activeClients, clientIP, clientPort);
-            incrementBlockNum(activeClients, clientIP, clientPort);
-            DATAPacket reply(activeClient.block_num, "");
-            int bytesRead = readFromFile(activeClient.file_fd, reply);
+            const Client *activeClient = getClient(activeClients, clientIP, clientPort);
+            if( ! activeClient ) {
+                std::cout << "#### problemas 2\n";
+                break;
+            }
+            auto inc_bn_ho = incrementBlockNum(activeClients, clientIP, clientPort);
+            DATAPacket reply(inc_bn_ho);
+            int bytesRead = readFromFile(activeClient->file_fd, reply);
             sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(OP_DATA)+bytesRead);
             if (bytesRead < blockSize) {
-                close(activeClient.file_fd);
+                // close(activeClient.file_fd);
                 removeClient(activeClients, clientIP, clientPort);
             }
             break;
