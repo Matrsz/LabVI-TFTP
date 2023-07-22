@@ -7,62 +7,51 @@
 #include <iostream>
 #include <unordered_map>
 #include "connections.h"
+#include "users.h"
 
-struct Client {
-    uint32_t address;
-    uint16_t port;
-    int file_fd;
-    uint16_t block_num;
+Client::Client(uint32_t address_, uint16_t port_, int file_fd_, uint16_t block_num_)
+    : address(address_),
+      port(port_),
+      file_fd(file_fd_),
+      block_num(block_num_)
+{
+}
 
-    Client() : address(0), port(0), file_fd(-1), block_num(0) {}
+Client::Client()
+    : address(0),
+      port(0),
+      file_fd(0),
+      block_num(0)
+{
+}
 
-    Client(uint32_t address, uint16_t port, int file_fd, uint16_t block_num) {
-        this->address = address;
-        this->port = port;
-        this->file_fd = file_fd;
-        this->block_num = block_num;
-    }
-};
 
-// A hash function used to hash a pair of any kind
-struct hash_pair {
-    template <class T1, class T2>
-    size_t operator()(const std::pair<T1, T2>& p) const {
-        auto hash1 = std::hash<T1>{}(p.first);
-        auto hash2 = std::hash<T2>{}(p.second);
-        if (hash1 != hash2) {
-            return hash1 ^ hash2;             
-        }
-        return hash1;
-    }
-};
-
-void printClient(const Client& user) {
-    std::cout << "User Information:" << std::endl;
-    std::cout << "IP Address: " << (user.address >> 24) << "." << ((user.address >> 16) & 0xFF) << "."
-              << ((user.address >> 8) & 0xFF) << "." << (user.address & 0xFF) << std::endl;
-    std::cout << "Port: " << user.port << std::endl;
-    std::cout << "File Descriptor: " << user.file_fd << std::endl;
-    std::cout << "Block Number: " << user.block_num << std::endl;
+void Client::printClient(std::ostream &os) {
+    os << "User Information:" << std::endl;
+    os << "IP Address: " << (address >> 24) << "." << ((address >> 16) & 0xFF) << "."
+              << ((address >> 8) & 0xFF) << "." << (address & 0xFF) << std::endl;
+    os << "Port: " << port << std::endl;
+    os << "File Descriptor: " << file_fd << std::endl;
+    os << "Block Number: " << block_num << std::endl;
     return;
 }
 
-void printActiveClients(const std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> activeClients) {
+void printActiveClients(const ClientsMap &activeClients, std::ostream &os) {
     std::cout << "Contents of the unordered_map : \n";
     for (auto p : activeClients) {
         std::cout << "[" << (p.first).first << ", "
              << (p.first).second << "] ==> \n";
-        printClient(p.second);
+        p.second.printClient(os);
     }
     return;
 }
 
-bool hasClient(const std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> activeClients, uint32_t address, uint16_t port) {
+bool hasClient(const ClientsMap &activeClients, uint32_t address, uint16_t port) {
     std::pair<uint32_t, uint16_t> key = std::make_pair(address, port);
     return activeClients.find(key) != activeClients.end();
 }
 
-void addClient(std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> &activeClients, uint32_t address, uint16_t port, int file_fd) {
+void addClient(ClientsMap &activeClients, uint32_t address, uint16_t port, int file_fd) {
     if (!hasClient(activeClients, address, port)) {
         std::pair<uint32_t, uint16_t> key = std::make_pair(address, port);
         activeClients[key] = Client(address, port, file_fd, 1);
@@ -70,24 +59,24 @@ void addClient(std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair>
     return;
 }
 
-Client getClient(std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> &activeClients, uint32_t address, uint16_t port) {
+Client getClient(ClientsMap &activeClients, uint32_t address, uint16_t port) {
     std::pair<uint32_t, uint16_t> key = std::make_pair(address, port);
     return activeClients[key];
 }
 
-void removeClient(std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> &activeClients, uint32_t address, uint16_t port) {
+void removeClient(ClientsMap &activeClients, uint32_t address, uint16_t port) {
     std::pair<uint32_t, uint16_t> key = std::make_pair(address, port);
     activeClients.erase(key);
     return;
 }
 
-void incrementBlockNum(std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> &activeClients, uint32_t address, uint16_t port) {
+void incrementBlockNum(ClientsMap &activeClients, uint32_t address, uint16_t port) {
     std::pair<uint32_t, uint16_t> key = std::make_pair(address, port);
     activeClients[key].block_num++;
     return;
 }
 
-void clientInfo(const struct sockaddr_in& clientAddr, uint32_t &address, uint16_t &port) {
+void clientInfo(const sockaddr_in& clientAddr, uint32_t &address, uint16_t &port) {
     address = ntohs(clientAddr.sin_addr.s_addr);
     port = ntohs(clientAddr.sin_port);
     return;

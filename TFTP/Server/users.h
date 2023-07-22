@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstring>
 #include <unordered_map>
+#include <iostream>
 
 struct Client {
     uint32_t address;
@@ -13,21 +14,32 @@ struct Client {
 
     Client();
     Client(uint32_t address, uint16_t port, int file_fd, uint16_t block_num);
+
+    void printClient(std::ostream &os);
+
 };
 
 // A hash function used to hash a pair of any kind
 struct hash_pair {
     template <class T1, class T2>
-    size_t operator()(const std::pair<T1, T2>& p) const;
+    size_t operator()(const std::pair<T1, T2>& p) const  {
+        auto hash1 = std::hash<T1>{}(p.first);
+        auto hash2 = std::hash<T2>{}(p.second);
+        if (hash1 != hash2) {
+            return hash1 ^ hash2;             
+        }
+        return hash1;
+    }
 };
 
-void printClient(const Client& user);
-void printActiveClients(const std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> activeClients);
-bool hasClient(const std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> activeClients, uint32_t address, uint16_t port);
-void addClient(std::unordered_map<std::pair<uint32_t, uint16_t>, Client, hash_pair>& activeClients, uint32_t address, uint16_t port, int file_fd);
-Client getClient(std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> &activeClients, uint32_t address, uint16_t port);
-void removeClient(std::unordered_map<std::pair<uint32_t, uint16_t>, Client, hash_pair>& activeClients, uint32_t address, uint16_t port);
-void incrementBlockNum(std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> &activeClients, uint32_t address, uint16_t port);
-void clientInfo(const struct sockaddr_in& clientAddr, uint32_t& address, uint16_t& port);
+using ClientsMap = std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair>;
+
+void printActiveClients(const ClientsMap &activeClients, std::ostream &os);
+bool hasClient(const ClientsMap &activeClients, uint32_t address, uint16_t port);
+void addClient(ClientsMap& activeClients, uint32_t address, uint16_t port, int file_fd);
+Client getClient(ClientsMap &activeClients, uint32_t address, uint16_t port);
+void removeClient(ClientsMap& activeClients, uint32_t address, uint16_t port);
+void incrementBlockNum(ClientsMap &activeClients, uint32_t address, uint16_t port);
+void clientInfo(const sockaddr_in& clientAddr, uint32_t& address, uint16_t& port);
 
 #endif 

@@ -29,7 +29,7 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, std::uno
             int file_fd = openWriteFile(filename);
             addClient(activeClients, clientIP, clientPort, file_fd);
             std::cout << "Received WRQ of file " << filename << std::endl; 
-            printActiveClients(activeClients);
+            printActiveClients(activeClients, std::cout);
             ACKPacket reply(0);
             sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply));
             break;
@@ -39,7 +39,7 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, std::uno
             int file_fd = openReadFile(filename);
             addClient(activeClients, clientIP, clientPort, file_fd);
             std::cout << "Received RRQ of file " << filename << std::endl; 
-            printActiveClients(activeClients);
+            printActiveClients(activeClients, std::cout);
             DATAPacket reply(1, "");
             int bytesRead = readFromFile(file_fd, reply);
             sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(OP_DATA)+bytesRead);
@@ -82,7 +82,7 @@ void handleMessage(void* buffer, int socket_fd, sockaddr_in clientAddr, std::uno
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char const* argv[]) {
-    std::unordered_map<std::pair<uint32_t,uint16_t>,Client,hash_pair> activeClients;
+    ClientsMap activeClients;
     
     struct sockaddr_in clientAddr;
     char buffer[1024];
