@@ -56,13 +56,15 @@ struct ACKPacket {
 };
 
 struct ERRORPacket {
-    uint16_t opcode;
-    uint16_t errorCode;
+    struct Hdr {
+        uint16_t opcode;
+        uint16_t error_code;
+    } hdr;
     char errorMsg[512];
 
-    ERRORPacket(uint16_t errorCode, const char* errorMsg) {
-        opcode = htons(OP_ERROR);
-        this->errorCode = htons(errorCode);
+    ERRORPacket(uint16_t error_code_ho, const char* errorMsg) {
+        hdr.opcode = htons(OP_ERROR);
+        hdr.error_code = htons(error_code_ho);
         std::strcpy(this->errorMsg, errorMsg);
     }
 };
@@ -71,5 +73,6 @@ uint16_t getOpcode(const void* buffer);
 char* getFilename(void* buffer);
 DATAPacket getData(void* buffer);
 ACKPacket getACK(void* buffer);
+ERRORPacket getError(void* buffer);
 
 #endif

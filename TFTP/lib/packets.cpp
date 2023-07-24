@@ -28,35 +28,40 @@ struct RWPacket {
 
 
 struct DATAPacket {
-    uint16_t opcode;
-    uint16_t block_num;
+    struct Hdr {
+        uint16_t opcode;
+        uint16_t block_num;
+    } hdr;
     char data[512];
 
-    DATAPacket(uint16_t block_num, const char* data) {
-        opcode = htons(OP_DATA);
-        this->block_num = htons(block_num);
-        std::strcpy(this->data, data);
+    DATAPacket(uint16_t block_num) {
+        hdr.opcode = htons(OP_DATA);
+        hdr.block_num = htons(block_num);
     }
 };
 
 struct ACKPacket {
-    uint16_t opcode;
-    uint16_t block_num;
+    struct Hdr {
+        uint16_t opcode;
+        uint16_t block_num;
+    } hdr;
 
-    ACKPacket(uint16_t block_num) {
-        opcode = htons(OP_ACK);
-        this->block_num = htons(block_num);
+    ACKPacket(uint16_t block_num_ho) {
+        hdr.opcode = htons(OP_ACK);
+        hdr.block_num = htons(block_num_ho);
     }
 };
 
 struct ERRORPacket {
-    uint16_t opcode;
-    uint16_t errorCode;
+    struct Hdr {
+        uint16_t opcode;
+        uint16_t error_code;
+    } hdr;
     char errorMsg[512];
 
-    ERRORPacket(uint16_t errorCode, const char* errorMsg) {
-        opcode = htons(OP_ERROR);
-        this->errorCode = htons(errorCode);
+    ERRORPacket(uint16_t error_code_ho, const char* errorMsg) {
+        hdr.opcode = htons(OP_ERROR);
+        hdr.error_code = htons(error_code_ho);
         std::strcpy(this->errorMsg, errorMsg);
     }
 };
@@ -77,5 +82,10 @@ DATAPacket getData(void* buffer) {
 
 ACKPacket getACK(void* buffer) {
     ACKPacket* packet = reinterpret_cast<ACKPacket*>(buffer);
+    return *packet;
+}
+
+ERRORPacket getError(void* buffer) {
+    ERRORPacket* packet = reinterpret_cast<ERRORPacket*>(buffer);
     return *packet;
 }

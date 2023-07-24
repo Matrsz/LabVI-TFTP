@@ -15,10 +15,12 @@ const int blockSize = 512;
 void initializeTransfer(uint16_t opcode, const char* filename, int socket_fd, sockaddr_in serverAddr, int *file_fd, uint16_t &block_num){
     switch (opcode) {
         case OP_WRQ:
+            std::cout << "==== Sending Write Request ====" << std::endl;
             *file_fd = openReadFile(filename);
             block_num = 0;
             break;
         case OP_RRQ: {
+            std::cout << "==== Sending Read Request ====" << std::endl;
             *file_fd = openWriteFile(filename);
             block_num = 1;
             break;
@@ -49,6 +51,7 @@ bool handleReply(void* buffer, int bytes_recv, int socket_fd, sockaddr_in server
             std::cout << "Sending ACK of block " << ntohs(reply.hdr.block_num)<< std::endl;
             sendMessage(socket_fd, serverAddr, (void*) &reply, sizeof(reply));
             if (bytesWritten < blockSize) {
+                std::cout << "====== Read request complete ======" << std::endl;
                 close(file_fd);
                 return false;
             }
@@ -57,23 +60,34 @@ bool handleReply(void* buffer, int bytes_recv, int socket_fd, sockaddr_in server
         case OP_ACK: {
             ACKPacket packet = getACK(buffer);
             std::cout << "Received ACK of block " << ntohs(packet.hdr.block_num)<< std::endl;
-//            if (!isFileOpen(file_fd)) {
-//                return false;
-//                break;
-//            }
+            if (!isFileOpen(file_fd)) {
+                return false;
+                break;
+            }
             block_num++;
             DATAPacket reply(block_num);
             int bytesRead = readFromFile(file_fd, reply);
             std::cout << "Sending DATA block " << ntohs(reply.hdr.block_num)<< std::endl;
             sendMessage(socket_fd, serverAddr, (void*) &reply, sizeof(reply.hdr)+bytesRead);
             if (bytesRead < blockSize) {
+                std::cout << "====== Write request complete ======" << std::endl;
                 close(file_fd);
-                return false;
             }
             break;
-        }
-        default:
+        }        
+        case OP_ERROR: {
+            ERRORPacket packet = getError(buffer);
+            std::cout << "Received error: " << packet.errorMsg << std::endl;
+            close(file_fd);
+            return false;
             break;
+        }
+        default: {
+            std::cout << "Unknown reply." << std::endl;
+            close(file_fd);
+            return false;
+            break;
+        }
     }
     return true;
 }
@@ -113,6 +127,20 @@ int main() {
     }
 
     initializeTransfer(OP_WRQ, "w_example.txt", socket_fd, serverAddr, &file_fd, block_num);
+
+    active_transfer = true;
+    while(active_transfer) {
+        int bytes_recv = receiveMessage(socket_fd, serverAddr, buffer, sizeof(buffer));
+        if (bytes_recv < 0) {
+            perror("recvfrom failed");
+            close(socket_fd);
+            return 1;
+        }
+        active_transfer = handleReply(buffer, bytes_recv, socket_fd, serverAddr, file_fd, block_num);
+    }
+
+
+    initializeTransfer(OP_RRQ, "e_example.txt", socket_fd, serverAddr, &file_fd, block_num);
 
     active_transfer = true;
     while(active_transfer) {

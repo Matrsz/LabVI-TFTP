@@ -27,7 +27,7 @@ void handleMessage(void* buffer, int bytes_recv, int socket_fd, sockaddr_in clie
             char* filename = getFilename(buffer);
             int file_fd = openWriteFile(filename);
             addClient(activeClients, clientIP, clientPort, file_fd);
-            std::cout << "Received WRQ of file " << filename << std::endl; 
+            std::cout << "==== Received WRQ of file " << filename << " ====" << std::endl; 
             printActiveClients(activeClients, std::cout);
             ACKPacket reply(0);
             std::cout << "Sending ACK of block " << ntohs(reply.hdr.block_num)<< std::endl;
@@ -36,15 +36,22 @@ void handleMessage(void* buffer, int bytes_recv, int socket_fd, sockaddr_in clie
         }
         case OP_RRQ: {
             char* filename = getFilename(buffer);
+            std::cout << "==== Received RRQ of file " << filename << " ====" << std::endl; 
             int file_fd = openReadFile(filename);
+            if (file_fd == -1) {
+                ERRORPacket reply(1, "ERROR: File not found.");
+                std::cout << "Sending ERROR " << ntohs(reply.hdr.error_code)<< std::endl;
+                sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply.hdr)+strlen(reply.errorMsg));
+                break;
+            }
             addClient(activeClients, clientIP, clientPort, file_fd);
-            std::cout << "Received RRQ of file " << filename << std::endl; 
             printActiveClients(activeClients, std::cout);
             DATAPacket reply(1);
             int bytesRead = readFromFile(file_fd, reply);
             std::cout << "Sending DATA block " << ntohs(reply.hdr.block_num)<< std::endl;
             sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply.hdr) + bytesRead);
             if (bytesRead < blockSize) {
+                std::cout << "====== Read request complete ======" << std::endl;
                 close(file_fd);
                 removeClient(activeClients, clientIP, clientPort);
             }
@@ -64,6 +71,7 @@ void handleMessage(void* buffer, int bytes_recv, int socket_fd, sockaddr_in clie
             std::cout << "Sending ACK of block " << ntohs(reply.hdr.block_num)<< std::endl;
             sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply));
             if (bytesWritten < blockSize) {
+                std::cout << "====== Write request complete ======" << std::endl;
                 close(activeClient->file_fd);
                 removeClient(activeClients, clientIP, clientPort);
             }
@@ -86,13 +94,23 @@ void handleMessage(void* buffer, int bytes_recv, int socket_fd, sockaddr_in clie
             std::cout << "Sending DATA block " << ntohs(reply.hdr.block_num)<< std::endl;
             sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply.hdr)+bytesRead);
             if (bytesRead < blockSize) {
+                std::cout << "====== Read request complete ======" << std::endl;
                 close(activeClient->file_fd);
                 removeClient(activeClients, clientIP, clientPort);
             }
             break;
         }
-        default:
+        case OP_ERROR: {
+            ERRORPacket packet = getError(buffer);
+            std::cout << "Received error: " << packet.errorMsg << std::endl;
             break;
+        }
+        default: {
+            ERRORPacket reply(4, "Illegal TFTP Operation");
+            std::cout << "Sending ERROR " << ntohs(reply.hdr.error_code)<< std::endl;
+            sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply.hdr)+strlen(reply.errorMsg));
+            break;
+        }
     }
 }
 
@@ -105,9 +123,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const* argv[]) {
     // Create UDP socket
     int socket_fd = createSocket();
     bindSocket(socket_fd);
-
-    // Receive message from client
-
 
     while (true) {
         int bytes_recv = receiveMessage(socket_fd, clientAddr, buffer, sizeof(buffer));
