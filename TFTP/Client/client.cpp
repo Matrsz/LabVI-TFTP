@@ -11,11 +11,15 @@
 
 const int blockSize = 512;
 
-void initializeTransfer(uint16_t opcode, const char* filename, int socket_fd, sockaddr_in serverAddr, int *file_fd, uint16_t &block_num){
+bool initializeTransfer(uint16_t opcode, const char* filename, int socket_fd, sockaddr_in serverAddr, int *file_fd, uint16_t &block_num){
     switch (opcode) {
         case OP_WRQ:
-            std::cout << "==== Sending Write Request ====" << std::endl;
             *file_fd = openReadFile(filename);
+            if (*file_fd == -1) {
+                std::cerr << "Error opening file for writing to server: " << filename << std::endl;
+                return false;
+            }
+            std::cout << "==== Sending Write Request ====" << std::endl;
             block_num = 0;
             break;
         case OP_RRQ: {
@@ -34,6 +38,7 @@ void initializeTransfer(uint16_t opcode, const char* filename, int socket_fd, so
     if( bytesSent != (int) to_send) {
         // problems...
     }
+    return true;
 }
 
 bool handleReply(void* buffer, int bytes_recv, int socket_fd, sockaddr_in serverAddr, int file_fd, uint16_t &block_num){
@@ -118,9 +123,8 @@ int main(int argc, char const* argv[]) {
     int file_fd = -1;
     uint16_t block_num;
 
-    initializeTransfer((std::strcmp(operation, "read") == 0) ? OP_RRQ : OP_WRQ, filename, socket_fd, serverAddr, &file_fd, block_num);
+    bool active_transfer = initializeTransfer((std::strcmp(operation, "read") == 0) ? OP_RRQ : OP_WRQ, filename, socket_fd, serverAddr, &file_fd, block_num);
 
-    bool active_transfer = true;
     while (active_transfer) {
         int bytes_recv = receiveMessage(socket_fd, serverAddr, buffer, sizeof(buffer));
         if (bytes_recv < 0) {
