@@ -64,11 +64,6 @@ int writeToFile(int file_fd, DATAPacket packet, int bytes_recv) {
 
 bool isFileOpen(int file_fd) {
     int flags = fcntl(file_fd, F_GETFD);
-
-    if (flags == -1) {
-        std::cerr << "Error checking file descriptor" << std::endl;
-        return false;
-    }
     bool isOpen = (flags & FD_CLOEXEC) == 0;
     return isOpen;
 }

@@ -7,7 +7,6 @@
 #include "packets.h"
 #include "files.h"
 
-#define SERVER_IP "127.0.0.1"
 #define PORT 1069
 
 const int blockSize = 512;
@@ -92,14 +91,22 @@ bool handleReply(void* buffer, int bytes_recv, int socket_fd, sockaddr_in server
     return true;
 }
 
-int main() {
+int main(int argc, char const* argv[]) {
+    if (argc < 4) {
+        std::cerr << "Usage: " << argv[0] << " <server_ip> <filename> <operation[read/write]>" << std::endl;
+        return 1;
+    }
+
+    const char* SERVER_IP = argv[1];
+    const char* filename = argv[2];
+    const char* operation = argv[3];
+
     char buffer[1024];
 
     // Create UDP socket
     int socket_fd = createSocket();
 
     // Set server address
-    // memset(&serverAddr, 0, sizeof(serverAddr));
     sockaddr_in serverAddr = { 0 };
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(PORT);
@@ -107,43 +114,14 @@ int main() {
 
     // Print server's IP address and port
     std::cout << "Server IP: " << SERVER_IP << ", Port: " << PORT << std::endl;
-    
-    // const char* filename = "example.txt";
 
     int file_fd = -1;
     uint16_t block_num;
 
-    initializeTransfer(OP_RRQ, "r_example.txt", socket_fd, serverAddr, &file_fd, block_num);
+    initializeTransfer((std::strcmp(operation, "read") == 0) ? OP_RRQ : OP_WRQ, filename, socket_fd, serverAddr, &file_fd, block_num);
 
     bool active_transfer = true;
-    while(active_transfer) {
-        int bytes_recv = receiveMessage(socket_fd, serverAddr, buffer, sizeof(buffer));
-        if (bytes_recv < 0) {
-            perror("recvfrom failed");
-            close(socket_fd);
-            return 1;
-        }
-        active_transfer = handleReply(buffer, bytes_recv, socket_fd, serverAddr, file_fd, block_num);
-    }
-
-    initializeTransfer(OP_WRQ, "w_example.txt", socket_fd, serverAddr, &file_fd, block_num);
-
-    active_transfer = true;
-    while(active_transfer) {
-        int bytes_recv = receiveMessage(socket_fd, serverAddr, buffer, sizeof(buffer));
-        if (bytes_recv < 0) {
-            perror("recvfrom failed");
-            close(socket_fd);
-            return 1;
-        }
-        active_transfer = handleReply(buffer, bytes_recv, socket_fd, serverAddr, file_fd, block_num);
-    }
-
-
-    initializeTransfer(OP_RRQ, "e_example.txt", socket_fd, serverAddr, &file_fd, block_num);
-
-    active_transfer = true;
-    while(active_transfer) {
+    while (active_transfer) {
         int bytes_recv = receiveMessage(socket_fd, serverAddr, buffer, sizeof(buffer));
         if (bytes_recv < 0) {
             perror("recvfrom failed");
