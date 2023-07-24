@@ -40,6 +40,7 @@ struct DATAPacket {
     DATAPacket(uint16_t block_num) {
         hdr.opcode = htons(OP_DATA);
         hdr.block_num = htons(block_num);
+        std::memset(this->data, 0, sizeof(this->data));
     }
 };
 
@@ -65,6 +66,7 @@ struct ERRORPacket {
     ERRORPacket(uint16_t error_code_ho, const char* errorMsg) {
         hdr.opcode = htons(OP_ERROR);
         hdr.error_code = htons(error_code_ho);
+        std::memset(this->errorMsg, 0, sizeof(this->errorMsg));
         std::strcpy(this->errorMsg, errorMsg);
     }
 };
