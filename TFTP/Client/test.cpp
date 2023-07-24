@@ -13,16 +13,16 @@ int main() {
     if (pid == 0) {
         // Child process for writing
         execl("./client", "client", SERVER_IP, write_filename, "write", nullptr);
-        std::cerr << "Failed to execute client for writing." << std::endl;
+        std::cerr << "Failed to execute client for WRQ." << std::endl;
         return 1;
     } else if (pid > 0) {
         // Parent process for reading
         // Call the client for reading
         execl("./client", "client", SERVER_IP, read_filename, "read", nullptr);
-        std::cerr << "Failed to execute client for reading." << std::endl;
+        std::cerr << "Failed to execute client for RRQ." << std::endl;
         return 1;
     } else {
-        std::cerr << "Failed to fork process for writing." << std::endl;
+        std::cerr << "Failed to fork process." << std::endl;
         return 1;
     }
 
