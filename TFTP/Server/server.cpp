@@ -108,7 +108,7 @@ void handleMessage(void* buffer, int bytes_recv, int socket_fd, sockaddr_in clie
         default: {
             ERRORPacket reply(4, "Illegal TFTP Operation");
             std::cout << "Sending ERROR " << ntohs(reply.hdr.error_code)<< std::endl;
-            sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply.hdr)+strlen(reply.errorMsg));
+            sendMessage(socket_fd, clientAddr, (void*) &reply, sizeof(reply.hdr)+strlen(reply.errorMsg)+1);
             break;
         }
     }

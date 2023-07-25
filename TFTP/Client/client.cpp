@@ -3,6 +3,8 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <chrono>
+#include <thread>
 #include "connections.h"
 #include "packets.h"
 #include "files.h"
@@ -10,6 +12,8 @@
 #define PORT 1069
 
 const int blockSize = 512;
+
+using namespace std;
 
 bool initializeTransfer(uint16_t opcode, const char* filename, int socket_fd, sockaddr_in serverAddr, int *file_fd, uint16_t &block_num){
     switch (opcode) {
@@ -33,7 +37,7 @@ bool initializeTransfer(uint16_t opcode, const char* filename, int socket_fd, so
     }
     const char* mode = "octet";
     RWPacket message(opcode, filename, mode);
-    size_t to_send = sizeof(OP_RRQ)+strlen(filename)+strlen(mode);
+    size_t to_send = sizeof(OP_RRQ)+strlen(filename)+strlen(mode) + 2;
     int bytesSent = sendMessage(socket_fd, serverAddr, (void*) &message, to_send);
     if( bytesSent != (int) to_send) {
         // problems...
@@ -52,6 +56,7 @@ bool handleReply(void* buffer, int bytes_recv, int socket_fd, sockaddr_in server
             int bytesWritten = writeToFile(file_fd, packet, bytes_recv-sizeof(packet.hdr));
             ACKPacket reply(block_num);
             block_num++;
+            this_thread::sleep_for(chrono::milliseconds(100));
             std::cout << "Sending ACK of block " << ntohs(reply.hdr.block_num)<< std::endl;
             sendMessage(socket_fd, serverAddr, (void*) &reply, sizeof(reply));
             if (bytesWritten < blockSize) {
@@ -72,6 +77,7 @@ bool handleReply(void* buffer, int bytes_recv, int socket_fd, sockaddr_in server
             DATAPacket reply(block_num);
             int bytesRead = readFromFile(file_fd, reply);
             std::cout << "Sending DATA block " << ntohs(reply.hdr.block_num)<< std::endl;
+            this_thread::sleep_for(chrono::milliseconds(100));
             sendMessage(socket_fd, serverAddr, (void*) &reply, sizeof(reply.hdr)+bytesRead);
             if (bytesRead < blockSize) {
                 std::cout << "====== Write request complete ======" << std::endl;
