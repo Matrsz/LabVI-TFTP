@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg viewBox="0 0 878 610" xmlns="http://www.w3.org/2000/svg" xmlns:inkspace="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink" width="878px" height="610px">
+  <defs id="defs_block">
+    <filter height="1.504" id="filter_blur" inkspace:collect="always" width="1.1575" x="-0.07875" y="-0.252">
+      <feGaussianBlur id="feGaussianBlur3780" inkspace:collect="always" stdDeviation="4.2" />
+    </filter>
+  </defs>
+  <title>blockdiag</title>
+  <desc>{
+  default_fontsize = 20
+  node_height = 45
+  node_width = 100
+  default_node_color = none
+  activation = none;
+  edge_length = 650;
+  default_note_color = white;
+  Server [label="Server", fontsize=26]
+  Client [label="Client", fontsize=26]
+  Server &lt;- Client [label="RRQ &lt;filename&gt;"];
+  Server -&gt; Client [label="DATA 1: [512 bytes]"];
+  Server &lt;- Client [label="ACK 1"];
+  === Múltiples intercambios DATA n: [512 bytes] -&gt; ACK n ===
+  Server -&gt; Client [label="DATA N: [m &lt; 512 bytes]"];
+  Server &lt;- Client [label="ACK N"];
+}</desc>
+  <path d="M 114 85 L 114 598" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <path d="M 764 85 L 764 598" fill="none" stroke="rgb(0,0,0)" stroke-dasharray="8 4" />
+  <rect fill="none" height="45" stroke="rgb(0,0,0)" width="100" x="64" y="40" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="26" font-style="normal" font-weight="normal" text-anchor="middle" textLength="88" x="114.0" y="75">Server</text>
+  <rect fill="none" height="45" stroke="rgb(0,0,0)" width="100" x="714" y="40" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="26" font-style="normal" font-weight="normal" text-anchor="middle" textLength="79" x="764.5" y="75">Client</text>
+  <path d="M 122 151 L 756 151" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="130,147 122,151 130,155" stroke="rgb(0,0,0)" />
+  <path d="M 122 228 L 756 228" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="748,224 756,228 748,232" stroke="rgb(0,0,0)" />
+  <path d="M 122 301 L 756 301" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="130,297 122,301 130,305" stroke="rgb(0,0,0)" />
+  <path d="M 122 463 L 756 463" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="748,459 756,463 748,467" stroke="rgb(0,0,0)" />
+  <path d="M 122 536 L 756 536" fill="none" stroke="rgb(0,0,0)" />
+  <polygon fill="rgb(0,0,0)" points="130,532 122,536 130,540" stroke="rgb(0,0,0)" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="20" font-style="normal" font-weight="normal" text-anchor="middle" textLength="173" x="665.5" y="147">RRQ &lt;filename&gt;</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="20" font-style="normal" font-weight="normal" text-anchor="middle" textLength="204" x="232.0" y="224">DATA 1: [512 bytes]</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="20" font-style="normal" font-weight="normal" text-anchor="middle" textLength="64" x="720.0" y="297">ACK 1</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="20" font-style="normal" font-weight="normal" text-anchor="middle" textLength="257" x="258.5" y="459">DATA N: [m &lt; 512 bytes]</text>
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="20" font-style="normal" font-weight="normal" text-anchor="middle" textLength="69" x="717.5" y="532">ACK N</text>
+  <path d="M 40 371 L 158 371" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 40 375 L 158 375" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 719 371 L 838 371" fill="none" stroke="rgb(0,0,0)" />
+  <path d="M 719 375 L 838 375" fill="none" stroke="rgb(0,0,0)" />
+  <rect fill="rgb(208,208,208)" height="31" stroke="rgb(0,0,0)" width="561" x="158" y="358" />
+  <text fill="rgb(0,0,0)" font-family="sans-serif" font-size="20" font-style="normal" font-weight="normal" text-anchor="middle" textLength="541" x="438.5" y="385">Múltiples intercambios DATA n: [512 bytes] -&gt; ACK n</text>
+</svg>

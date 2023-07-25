@@ -1,0 +1,340 @@
+---
+title: "Protocolo TFTP"
+author: "Matías Roqueta"
+format: 
+  beamer:
+    institute: "Ingeniería en Telecomunicaciones, Instituto Balseiro"
+    theme: Hannover
+    colortheme: seahorse
+    fonttheme: structuresmallcapsserif
+    code-overflow: wrap   
+    linestretch: 2
+    monofont: 'Inconsolata'
+jupyter: julia-1.8
+---
+
+## Tramas TFTP
+
+- TFTP es un protocolo simple de transmisión de archivos sobre el protocolo de internet UDP.
+\vspace{0.5em}
+- Existen 5 tipos de trama en el protocolo TFTP.
+\vspace{0.5em}
+- Cada trama es identificada por un _header_ que contiene mínimamente su código de operación (`opcode`).
+
+| `opcode` | Operación | Descripción |
+| --- | --- | --- |
+| 1 | `RRQ` | Read request |
+| 2 | `WRQ` | Write request |
+| 3 | `DATA` | Data |
+| 4 | `ACK` | Acknowledgement |
+| 5 | `ERROR` | Error |
+
+
+```{julia}
+#| echo: false
+#| output: false
+
+using Kroki 
+using Base: Fix1, Fix2
+
+Diagram(:bytefield, """
+(defn draw-group-label-header
+  [span label]
+  (draw-box (text label [:math {:font-size 11}]) {:span    span
+                                                  :borders #{}
+                                                  :height  14}))
+(def row-height 20)
+(def boxes-per-row 8)
+(draw-group-label-header 2 "uint16")
+(draw-group-label-header 2 "string")
+(draw-group-label-header 1 "byte")
+(draw-group-label-header 2 "string")
+(draw-group-label-header 1 "byte")
+(next-row 15)
+(draw-box (text "opcode" {:font-size 12}) {:span 2})
+(draw-box (text "filename" {:font-size 12}) [:box-first {:span 2}])
+(draw-box (text "0" {:font-size 12}) [:box-last {:span 1}])
+(draw-box (text "mode" {:font-size 12}) [:box-first {:span 2}])
+(draw-box (text "0" {:font-size 12}) [:box-last {:span 1}])
+;;(next-row 25)
+;;(draw-column-headers {:labels ["0" "1" "2" "..." "N" "N+1" "..." "M"]})
+""") |> Fix2(render, "svg") |> Fix1(write, "Images/rwrq.svg")
+```
+
+
+```{julia}
+#| echo: false
+#| output: false
+
+using Kroki 
+using Base: Fix1, Fix2
+
+Diagram(:bytefield, """
+(defn draw-group-label-header
+  [span label]
+  (draw-box (text label [:math {:font-size 11}]) {:span    span
+                                                  :borders #{}
+                                                  :height  14}))
+(def row-height 20)
+(def boxes-per-row 8)
+(draw-group-label-header 2 "uint16")
+(draw-group-label-header 2 "uint16")
+(draw-group-label-header 4 "512 bytes")
+(next-row 15)
+(draw-box (text "opcode" {:font-size 12}) {:span 2 :text-anchor "start"})
+(draw-box (text "block #" {:font-size 12}) {:span 2  :text-anchor "start"})
+(draw-box (text "data" {:font-size 12}) {:span 2  :text-anchor "start" :borders #{:left :top :bottom}})
+(draw-gap-inline)
+(draw-box "" {:span 1 :borders #{:right :top :bottom}})
+;;(next-row 25)
+;;(draw-column-headers {:labels ["0" "1" "2" "3" "4" "..." ""  "516"]})
+""") |> Fix2(render, "svg") |> Fix1(write, "Images/data.svg")
+```
+
+
+```{julia}
+#| echo: false
+#| output: false
+
+using Kroki 
+using Base: Fix1, Fix2
+
+Diagram(:bytefield, """
+(defn draw-group-label-header
+  [span label]
+  (draw-box (text label [:math {:font-size 11}]) {:span    span
+                                                  :borders #{}
+                                                  :height  14}))
+(def row-height 20)
+(def boxes-per-row 4)
+(draw-group-label-header 2 "uint16")
+(draw-group-label-header 2 "uint16")
+(next-row 15)
+(draw-box (text "opcode" {:font-size 12}) {:span 2})
+(draw-box (text "block #" {:font-size 12}) {:span 2})
+;;(next-row 25)
+;;(draw-column-headers {:labels ["0" "1" "2" "3" "4" "..." "N"]})
+""") |> Fix2(render, "svg") |> Fix1(write, "Images/ack.svg")
+```
+```{julia}
+#| echo: false
+#| output: false
+
+using Kroki 
+using Base: Fix1, Fix2
+
+Diagram(:bytefield, """
+(defn draw-group-label-header
+  [span label]
+  (draw-box (text label [:math {:font-size 11}]) {:span    span
+                                                  :borders #{}
+                                                  :height  14}))
+(def row-height 20)
+(def boxes-per-row 8)
+(draw-group-label-header 2 "uint16")
+(draw-group-label-header 2 "uint16")
+(draw-group-label-header 3 "string")
+(draw-group-label-header 1 "byte")
+(next-row 15)
+(draw-box (text "opcode" {:font-size 12}) {:span 2})
+(draw-box (text "err-code" {:font-size 12}) {:span 2})
+(draw-box (text "err-msg" {:font-size 12}) [:box-first {:span 3}])
+(draw-box (text "0" {:font-size 12}) [:box-last {:span 1}])
+;;(next-row 25)
+;;(draw-column-headers {:labels ["0" "1" "2" "3" "4" "..." "N"]})
+""") |> Fix2(render, "svg") |> Fix1(write, "Images/error.svg")
+```
+
+##
+
+### Tramas RRQ y WRQ
+\vspace{0.75em}
+![](Images/rwrq.svg){fig-align="left"}
+
+### Trama DATA
+\vspace{0.75em}
+
+![](Images/data.svg){fig-align="left"}
+
+### Trama ACK
+\vspace{0.75em}
+
+![](Images/ack.svg){fig-align="left"}
+
+### Trama ERROR
+\vspace{0.75em}
+
+![](Images/error.svg){fig-align="left"}
+
+## Transferencia de Archivos
+
+- La transferencia de un archivo se inicia con el envío de una trama RRQ o WRQ del cliente al servidor.
+\vspace{0.5em}
+- El archivo es transmitido en tramas `DATA` consecutivas con un _payload_ de 512 bytes.
+\vspace{0.5em}
+- Cada bloque se responde con una trama `ACK` antes de que se envíe el siguiente bloque.
+\vspace{0.5em}
+- La transmisión de una trama `DATA` con _payload_ menor a 512 bytes indica el fin de la transmisión del archivo.
+\vspace{0.5em}
+- Un error es informado por una trama `ERROR`, en presencia de un error se interrumpe la transmisión.
+
+## Procedimiento Lectura
+
+```{julia}
+#| echo: false
+#| output: false
+
+Diagram(:seqdiag, """
+{
+  default_fontsize = 20
+  node_height = 45
+  node_width = 100
+  default_node_color = none
+  activation = none;
+  edge_length = 650;
+  default_note_color = white;
+  Server [label="Server", fontsize=26]
+  Client [label="Client", fontsize=26]
+  Server <- Client [label="RRQ <filename>"];
+  Server -> Client [label="DATA 1: [512 bytes]"];
+  Server <- Client [label="ACK 1"];
+  === Múltiples intercambios DATA n: [512 bytes] -> ACK n ===
+  Server -> Client [label="DATA N: [m < 512 bytes]"];
+  Server <- Client [label="ACK N"];
+}""") |> Fix2(render, "svg") |> Fix1(write, "Images/read.svg")
+```
+
+![](Images/read.svg){fig-align="center"}
+
+## Procedimiento Escritura
+
+\vspace{-1em}
+```{julia}
+#| echo: false
+#| output: false
+
+Diagram(:seqdiag, """
+{
+  default_fontsize = 20
+  node_height = 45
+  node_width = 100
+  default_node_color = none
+  activation = none;
+  edge_length = 650;
+  default_note_color = white;
+  Server [label="Server", fontsize=26]
+  Client [label="Client", fontsize=26]
+  Server <- Client [label="WRQ <filename>"];
+  Server -> Client [label="ACK 0"];
+  Server <- Client [label="DATA 1: [512 bytes]"];
+  Server -> Client [label="ACK 1"];
+  === Múltiples intercambios DATA n: [512 bytes] -> ACK n ===
+  Server <- Client [label="DATA N: [m < 512 bytes]"];
+  Server -> Client [label="ACK N"];
+}""") |> Fix2(render, "svg") |> Fix1(write, "Images/write.svg")
+```
+
+![](Images/write.svg){fig-align="center"}
+
+## Múltiples Clientes
+
+```{julia}
+#| echo: false
+#| output: false
+
+Diagram(:erd, """
+[ClientsMap]
+*`keys` {label: "pair<uint32,uint16>"}
+
+[Client]
++`address` {label: "uint32"}
++`port` {label: "uint16"}
+`file_descriptor` {label: "int"}
+`block_num` {label: "uint16"}
+
+ClientsMap 1--* Client 
+""") |> Fix2(render, "svg") |> Fix1(write, "Images/clases.svg")
+```
+
+![](Images/clases.svg){fig-align="center"}
+
+## Sockets UDP
+
+```cpp
+void clientInfo(const sockaddr_in& clientAddr, 
+                uint32_t &ip, uint16_t &port) {
+    ip   = ntohl(clientAddr.sin_addr.s_addr);
+    port = ntohs(clientAddr.sin_port);
+    return;
+}
+```
+
+## Implementación Tramas
+
+Las tramas se implementan como `struct` con los campos correspondientes, por ejemplo:
+
+``` cpp
+struct DATAPacket {
+    struct Hdr {
+        uint16_t opcode;
+        uint16_t block_num;
+    } hdr;
+    char data[512];
+    DATAPacket(uint16_t block_num) {
+        hdr.opcode = htons(OP_DATA);
+        hdr.block_num = htons(block_num);
+        memset(this->data, 0, sizeof(this->data));
+    }
+};
+```
+
+## Implementación Tramas 
+
+Las tramas se transmitirán y recibirán en formato `(void*)`. Se implementa una función para identificar el `opcode` de una trama recibida. 
+
+Esto se consigue casteando el buffer a formato `uint16_t` y retornando el primer elemento.
+
+```cpp
+uint16_t getOpcode(const void* buffer) {
+    return ntohs(((uint16_t*) buffer)[0]);
+}
+```
+
+En función del `opcode` el receptor podrá castear la trama al formato correcto usando un `switch`.
+
+
+## Lectura y Escritura
+
+Leer de un archivo consiste en copiar los datos de un `file descriptor` al campo `data` de una `struct DATAPacket` en un `offset` indicado por el campo `block_num`.
+
+Escribir a un archivo consiste en copiar los datos del campo `data` de una `struct DATAPacket` a un `file descriptor` en un `offset` indicado por el campo `block_num`.
+
+Ejemplo lectura:
+
+```cpp
+int readFromFile(int file_fd, DATAPacket &pk) {
+    int offs = blockSize*(ntohs(pk.hdr.block_num)-1);
+    ssize_t bytesRead = pread(file_fd, pk.data, 
+                              sizeof(pk.data), offs);
+    return bytesRead;
+}
+```
+
+## Implementación Servidor
+
+```cpp
+void handleMessage(...) {
+    uint16_t opcode = getOpcode(buffer);
+    uint32_t clientIP;
+    uint16_t clientPort;
+    clientInfo(clientAddr, clientIP, clientPort);
+    switch (opcode) {
+        case OP_WRQ:   // handle write request...
+        case OP_RRQ:   // handle read request...
+        case OP_DATA:  // handle received data...
+        case OP_ACK:   // handle acknowledgement...
+        case OP_ERROR: // handle received error...
+        default:       // handle invalid opcode...
+    }
+}
+```
