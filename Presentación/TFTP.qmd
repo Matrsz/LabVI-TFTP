@@ -236,6 +236,18 @@ Diagram(:seqdiag, """
 
 ![](Images/write.svg){fig-align="center"}
 
+
+## Sockets UDP
+
+```cpp
+void clientInfo(const sockaddr_in& clientAddr, 
+                uint32_t &ip, uint16_t &port) {
+    ip   = ntohl(clientAddr.sin_addr.s_addr);
+    port = ntohs(clientAddr.sin_port);
+    return;
+}
+```
+
 ## Múltiples Clientes
 
 ```{julia}
@@ -257,17 +269,6 @@ ClientsMap 1--* Client
 ```
 
 ![](Images/clases.svg){fig-align="center"}
-
-## Sockets UDP
-
-```cpp
-void clientInfo(const sockaddr_in& clientAddr, 
-                uint32_t &ip, uint16_t &port) {
-    ip   = ntohl(clientAddr.sin_addr.s_addr);
-    port = ntohs(clientAddr.sin_port);
-    return;
-}
-```
 
 ## Implementación Tramas
 
@@ -323,7 +324,7 @@ int readFromFile(int file_fd, DATAPacket &pk) {
 ## Implementación Servidor
 
 ```cpp
-void handleMessage(...) {
+void handleMessage(args...) {
     uint16_t opcode = getOpcode(buffer);
     uint32_t clientIP;
     uint16_t clientPort;
