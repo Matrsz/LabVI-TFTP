@@ -239,6 +239,10 @@ Diagram(:seqdiag, """
 
 ## Sockets UDP
 
+Al ser UDP, el servidor no establece conexión con los clientes, sin embargo necesita identificarlos para responder al cliente correcto.
+
+Se implementa una función que identificará a un cliente por su dirección IP y puerto de origen luego de recibir un datagrama:
+
 ```cpp
 void clientInfo(const sockaddr_in& clientAddr, 
                 uint32_t &ip, uint16_t &port) {
@@ -249,6 +253,8 @@ void clientInfo(const sockaddr_in& clientAddr,
 ```
 
 ## Múltiples Clientes
+
+El servidor necesita atender a múltiples clientes con un único socket UDP. Para esto se mantiene un registro de los clientes con transferencias activas.
 
 ```{julia}
 #| echo: false
@@ -269,6 +275,8 @@ ClientsMap 1--* Client
 ```
 
 ![](Images/clases.svg){fig-align="center"}
+
+El directorio de clientes se implementa con una estructura `std::unsorted_map`, en donde las claves son tipo `std::pair` con la dirección de origen y el puerto de origen.
 
 ## Implementación Tramas
 
@@ -337,5 +345,54 @@ void handleMessage(args...) {
         case OP_ERROR: // handle received error...
         default:       // handle invalid opcode...
     }
+}
+```
+
+##
+
+### Handle write request
+
+- Se extrae el `filename` de la solicitud y se abre un nuevo archivo en modo `WRITE ONLY`. Si hay error al abrir el archivo se envía un `ERRORPacket` al cliente. 
+- Si no hay error, se registra una nueva entrada en el directorio de clientes. 
+- Se envía un `ACKPacket` al cliente con `block_num=0`.
+
+### Handle read request
+
+- Se extrae el `filename` de la solicitud y se abre un nuevo archivo en modo `READ ONLY`. Si hay error al abrir el archivo se envía un `ERRORPacket` al cliente. 
+- Si no hay error, se registra una nueva entrada en el directorio de clientes.
+- Se inicializa un nuevo `DATAPacket` con `block_num=1`, se lee del `file descriptor` al `DATAPacket` y este se transmite. 
+- Si el número de bytes leidos es menor a 512, se cierra el `file descriptor` y se elimina el cliente del directorio.
+
+##
+
+### Handle received data
+
+- Se busca el cliente en el directorio para obtener el `file descriptor` de su archivo.
+- Se escribe del `DATAPacket` recibido al `file_descriptor` obtenido del registro de clientes.
+- Se responde con el `ACKPacket` de este `block_num`, y luego se incrementa el `block_num` del cliente registrado.
+- Si el número de bytes escritos es menor a 512, se cierra el `file descriptor` y se elimina el cliente del directorio.
+  
+### Handle acknowledgeemnt
+
+- Se busca el cliente en el directorio para obtener el `file descriptor` de su archivo. Si el cliente no está en el directorio se ignora la trama.
+- Se incrementa el `block_num` y inicializa un nuevo `DATAPacket` con el nuevo `block_num`, se lee del `file descriptor` al `DATAPacket` y este se transmite. 
+- Si el número de bytes leidos es menor a 512, se cierra el `file descriptor` y se elimina el cliente del directorio.
+
+## Test realizado
+
+Se realiza una prueba para validar que el servidor implementado pueda atender a múltiples clientes ejecutando el cliente implementado en modos lectura y escritura simultáneamente:
+
+```cpp
+int main() {
+    const char* SERVER_IP = "127.0.0.1";
+    pid_t pid = fork();
+    if (pid == 0) {
+        execl("./client", "client", SERVER_IP, 
+              "r_example.txt", "write", nullptr);
+    } else if (pid > 0) {
+        execl("./client", "client", SERVER_IP, 
+              "w_example.txt", "read", nullptr);
+    }
+    return 0;
 }
 ```
