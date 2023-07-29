@@ -7,6 +7,7 @@ format:
     theme: Hannover
     colortheme: seahorse
     fonttheme: structuresmallcapsserif
+    fontfamily: libertinus
     code-overflow: wrap   
     linestretch: 2
     monofont: 'Inconsolata'
@@ -330,6 +331,8 @@ int readFromFile(int file_fd, DATAPacket &pk) {
 ```
 
 ## Implementación Servidor
+
+Consiste en un `while(true)` en el cual se reciben mensajes por un `socket` y luego se llama al ciclo principal del servidor:
 
 ```cpp
 void handleMessage(args...) {
